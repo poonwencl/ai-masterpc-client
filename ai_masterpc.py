@@ -33,13 +33,27 @@ GREEN    = "#00ff88"
 YELLOW   = "#ffd700"
 
 def get_rustdesk_path():
-    """Найти RustDesk рядом с exe или скачать"""
+    """Найти RustDesk — сначала из bundled ресурсов, потом рядом, потом скачать"""
     import urllib.request
+    import shutil
+
+    # Если запущен как PyInstaller exe — RustDesk.exe в _MEIPASS (bundled)
+    if getattr(sys, 'frozen', False):
+        bundled = os.path.join(sys._MEIPASS, "RustDesk.exe")
+        if os.path.exists(bundled):
+            # Копируем во временную папку рядом с exe (нужно для запуска)
+            base = os.path.dirname(sys.executable)
+            dest = os.path.join(base, "RustDesk.exe")
+            if not os.path.exists(dest):
+                shutil.copy2(bundled, dest)
+            return dest
+
     base = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)
     rd = os.path.join(base, "RustDesk.exe")
     if os.path.exists(rd):
         return rd
-    # Попробовать стандартные пути
+
+    # Стандартные пути установки
     paths = [
         r"C:\Program Files\RustDesk\RustDesk.exe",
         r"C:\Program Files (x86)\RustDesk\RustDesk.exe",
@@ -48,7 +62,8 @@ def get_rustdesk_path():
     for p in paths:
         if os.path.exists(p):
             return p
-    # Скачать с сервера
+
+    # Последний шанс — скачать с сервера
     try:
         url = "http://185.23.238.149/rustdesk/RustDesk.exe"
         dest = os.path.join(base, "RustDesk.exe")

