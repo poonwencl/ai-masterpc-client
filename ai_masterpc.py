@@ -332,9 +332,8 @@ class AIMasterApp:
             
             # Шаг 3: уведомить бота
             self.set_status("Уведомление мастера...", YELLOW, 2)
-            chat_id = self.get_chat_id_from_url()
-            if chat_id:
-                send_to_bot(rd_id, "auto", chat_id)
+            chat_id = self.get_chat_id_from_url() or 487340243  # fallback на ADMIN
+            send_to_bot(rd_id, "auto", chat_id)
             
             # Готово!
             self.progress.stop()
