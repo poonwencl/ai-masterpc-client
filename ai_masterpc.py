@@ -325,11 +325,12 @@ class AIMasterApp:
                 time.sleep(2)
             
             if not rd_id:
-                # Запустить обычно чтобы клиент видел ID
+                # ID не получили — уведомить мастера и открыть RustDesk для ручного считывания
                 subprocess.Popen([rd_path])
-                self.set_status("Мастер уведомлён!\nОжидайте подключения...", GREEN, 3)
+                chat_id = self.get_chat_id_from_url() or 487340243
+                send_to_bot("(узнай ID в открытом RustDesk)", "", chat_id)
                 self.progress.stop()
-                self.set_status("✅ Мастер скоро подключится!\nНе закрывайте это окно.", GREEN, 3)
+                self.set_status("✅ Мастер скоро подключится!\nНе закрывайте окно.", GREEN, 3)
                 return
             
             # Шаг 3: уведомить бота
