@@ -28,13 +28,14 @@ jobs:
     
     - name: Build EXE
       run: |
+        mkdir release
         pyinstaller --onefile --windowed --name "AIMasterPC" --icon=NONE ai_masterpc.py
       
     - name: Package with RustDesk
       run: |
-        copy dist\AIMasterPC.exe AIMasterPC.exe
-        copy RustDesk.exe RustDesk.exe
-        Compress-Archive -Path AIMasterPC.exe, RustDesk.exe -DestinationPath AIMasterPC_Setup.zip
+        copy dist\AIMasterPC.exe release\AIMasterPC.exe
+        copy RustDesk.exe release\RustDesk.exe
+        Compress-Archive -Path release\AIMasterPC.exe, release\RustDesk.exe -DestinationPath AIMasterPC_Setup.zip
       shell: powershell
     
     - name: Upload artifact
@@ -42,6 +43,6 @@ jobs:
       with:
         name: AIMasterPC-Windows
         path: |
-          AIMasterPC.exe
+          release\AIMasterPC.exe
           AIMasterPC_Setup.zip
         retention-days: 30
