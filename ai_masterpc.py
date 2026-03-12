@@ -258,7 +258,7 @@ class AIMasterApp:
         if len(sys.argv) > 1:
             try:
                 return int(sys.argv[1])
-        except Exception:
+            except Exception:
                 pass
         return None
     
