@@ -308,7 +308,7 @@ class AIMasterApp:
             CREATE_NO_WINDOW = 0x08000000
             DETACHED_PROCESS = 0x00000008
             self.rd_process = subprocess.Popen(
-                [rd_path, "--connect", "0"],
+                [rd_path],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS
