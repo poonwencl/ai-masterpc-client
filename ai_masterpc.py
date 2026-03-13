@@ -152,6 +152,34 @@ def get_rustdesk_id():
                     return m.group(1)
         except Exception:
             pass
+        
+        # 4. Прочитать ID из заголовка окна RustDesk через PowerShell
+        try:
+            result = sp.run(
+                ["powershell", "-WindowStyle", "Hidden", "-Command",
+                 "(Get-Process -Name RustDesk -ErrorAction SilentlyContinue | Select-Object -First 1).MainWindowTitle"],
+                capture_output=True, text=True, timeout=8, creationflags=0x08000000
+            )
+            out = result.stdout.strip()
+            m = re.search(r"(\d{6,12})", out)
+            if m:
+                return m.group(1)
+        except Exception:
+            pass
+        
+        # 5. Поиск по всем toml файлам в APPDATA
+        try:
+            import glob
+            for cfg in glob.glob(os.path.join(os.environ.get("APPDATA",""), "**", "*.toml"), recursive=True):
+                try:
+                    content = open(cfg, encoding="utf-8", errors="ignore").read()
+                    m = re.search(r"(?:^|\n)id\s*=\s*["\']?(\d{6,12})["\']?", content)
+                    if m:
+                        return m.group(1)
+                except Exception:
+                    pass
+        except Exception:
+            pass
     
     return None
 
