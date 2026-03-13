@@ -98,30 +98,60 @@ def setup_rustdesk_config():
         pass
 
 def get_rustdesk_id():
-    """Получить ID RustDesk из лога или реестра"""
-    # Подождать пока RustDesk запустится и получит ID
-    time.sleep(5)
+    """Получить ID RustDesk — реестр + несколько путей конфига + --get-id"""
+    import glob, subprocess as sp
     
-    # Попробовать через реестр
-    try:
-        key_path = r"SOFTWARE\RustDesk\config"
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path) as key:
-            rd_id, _ = winreg.QueryValueEx(key, "id")
-            return rd_id
-    except Exception:
-        pass
-    
-    # Попробовать через файл конфига
-    try:
-        cfg = os.path.join(os.environ["APPDATA"], "RustDesk", "config", "RustDesk2.toml")
-        if os.path.exists(cfg):
-            with open(cfg) as f:
-                content = f.read()
-            m = re.search(r'id\s*=\s*["\']?(\d+)["\']?', content)
-            if m:
-                return m.group(1)
-    except Exception:
-        pass
+    for wait in range(12):
+        time.sleep(3)
+        
+        # 1. Реестр HKCU
+        try:
+            for key_path in [r"SOFTWARE\RustDesk\config", r"SOFTWARE\RustDesk"]:
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+                    rd_id, _ = winreg.QueryValueEx(key, "id")
+                    if rd_id and str(rd_id).strip().isdigit():
+                        return str(rd_id).strip()
+        except Exception:
+            pass
+        
+        # 2. Все возможные пути RustDesk2.toml
+        paths = [
+            os.path.join(os.environ.get("APPDATA",""), "RustDesk", "config", "RustDesk2.toml"),
+            os.path.join(os.environ.get("LOCALAPPDATA",""), "RustDesk", "config", "RustDesk2.toml"),
+            r"C:\Windows\ServiceProfiles\LocalService\AppData\Roaming\RustDesk\config\RustDesk2.toml",
+        ]
+        # Динамический поиск
+        try:
+            base = os.path.dirname(sys.executable if getattr(sys, "frozen", False) else __file__)
+            paths += glob.glob(os.path.join(base, "**", "RustDesk2.toml"), recursive=True)
+        except Exception:
+            pass
+        
+        for cfg in paths:
+            try:
+                if os.path.exists(cfg):
+                    content = open(cfg, encoding="utf-8", errors="ignore").read()
+                    m = re.search(r'(?:^|\n)id\s*=\s*["\']?(\d{6,12})["\']?', content)
+                    if m:
+                        return m.group(1)
+            except Exception:
+                pass
+        
+        # 3. Попробовать --get-id через RustDesk.exe
+        try:
+            base = os.path.dirname(sys.executable if getattr(sys, "frozen", False) else __file__)
+            rd = os.path.join(base, "RustDesk.exe")
+            if not os.path.exists(rd):
+                rd = r"C:\Program Files\RustDesk\RustDesk.exe"
+            if os.path.exists(rd):
+                result = sp.run([rd, "--get-id"], capture_output=True, text=True, timeout=5,
+                    creationflags=0x08000000)
+                out = (result.stdout + result.stderr).strip()
+                m = re.search(r"(\d{6,12})", out)
+                if m:
+                    return m.group(1)
+        except Exception:
+            pass
     
     return None
 
