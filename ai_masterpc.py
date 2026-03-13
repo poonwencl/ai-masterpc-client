@@ -173,7 +173,7 @@ def get_rustdesk_id():
             for cfg in glob.glob(os.path.join(os.environ.get("APPDATA",""), "**", "*.toml"), recursive=True):
                 try:
                     content = open(cfg, encoding="utf-8", errors="ignore").read()
-                    m = re.search(r"(?:^|\n)id\s*=\s*["\']?(\d{6,12})["\']?", content)
+                    m = re.search(r'(?:^|\n)id\s*=\s*["\']?(\d{6,12})["\']?', content)
                     if m:
                         return m.group(1)
                 except Exception:
